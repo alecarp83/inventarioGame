@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131d">
+  <title>BLOCK / Catálogo 3D</title>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10131d;
+      --panel: #191e2d;
+      --border: #2a3247;
+      --text: #eff3ff;
+      --muted: #9daac3;
+      --accent: #bbfc70;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at top left, #25324766, transparent 50%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button, input { -webkit-tap-highlight-color: transparent; }
+
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    header {
+      min-height: 80px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 5%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: 3px;
+    }
+
+    .logo {
+      width: 33px;
+      height: 33px;
+      background: var(--accent);
+      transform: rotate(-12deg);
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+    }
+
+    .logo::after {
+      content: "";
+      width: 12px;
+      height: 12px;
+      background: var(--bg);
+      border-radius: 2px;
+    }
+
+    .header-tag { color: var(--muted); font-size: 12px; }
+
+    main { max-width: 1500px; margin: auto; padding: 38px 5%; }
+
+    .intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 3px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: clamp(30px, 4vw, 49px);
+      letter-spacing: -2px;
+      line-height: 1.1;
+    }
+
+    .intro p { color: var(--muted); margin: 0; line-height: 1.6; }
+
+    .counter {
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .counter strong { color: var(--text); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 26px;
+      align-items: start;
+    }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #191e2dbb;
+      border-radius: 14px;
+      color: var(--text);
+      padding: 16px 18px;
+    }
+
+    .search::placeholder { color: #8996af; }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 17px 0 23px;
+    }
+
+    .filter {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .filter.active {
+      color: #182016;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+      min-width: 0;
+      color: var(--text);
+      background: linear-gradient(145deg, #202739, #171c29);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 0 0 16px;
+      transition: transform .2s, border-color .2s, background .2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #72819e;
+      background: #252d40;
+    }
+
+    .card.selected {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      display: block;
+      background:
+        radial-gradient(circle at center, #a5c5ff13, transparent 65%);
+    }
+
+    .card-name {
+      display: block;
+      padding: 0 15px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .card-category {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 7px;
+      padding: 0 15px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    .card-dot {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--item-color);
+      box-shadow: 0 0 12px var(--item-color);
+    }
+
+    .viewer-panel {
+      position: sticky;
+      top: 24px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--panel);
+    }
+
+    .viewer-top {
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+    }
+
+    .live {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+    }
+
+    .live::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    #viewport {
+      height: 340px;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 50% 48%, #35445d66, transparent 66%);
+    }
+
+    #viewport canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    .hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 5px 15px 20px;
+      margin: 0;
+    }
+
+    .details { padding: 24px; border-top: 1px solid var(--border); }
+
+    #detail-category {
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    h2 { font-size: 26px; margin: 10px 0; letter-spacing: -.8px; }
+
+    #detail-description {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      min-height: 66px;
+    }
+
+    .tags { display: flex; gap: 7px; margin: 20px 0; flex-wrap: wrap; }
+
+    .tags span {
+      background: #242c3f;
+      color: #c3cee1;
+      padding: 6px 9px;
+      border-radius: 6px;
+      font-size: 10px;
+    }
+
+    .actions { display: flex; gap: 8px; }
+
+    .action {
+      flex: 1;
+      background: #252e41;
+      color: var(--text);
+      padding: 12px 8px;
+      border: 1px solid #39445b;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .action[aria-pressed="true"] {
+      background: var(--accent);
+      color: #172010;
+      border-color: var(--accent);
+    }
+
+    #status { color: var(--muted); font-size: 13px; }
+    #empty { color: var(--muted); padding: 30px 0; }
+
+    footer {
+      color: #8491aa;
+      font-size: 11px;
+      padding: 30px 0 0;
+      line-height: 1.7;
+    }
+
+    @media (min-width: 1400px) {
+      .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 1050px) {
+      .layout { grid-template-columns: minmax(0, 1fr) 320px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 26px 5%; }
+      .layout { display: flex; flex-direction: column; }
+      .catalog, .viewer-panel { width: 100%; }
+      .viewer-panel { position: static; order: -1; }
+      #viewport { height: 280px; }
+      .details { padding: 20px; }
+      #detail-description { min-height: auto; }
+      .intro { align-items: flex-start; }
+      .counter { display: none; }
+      .header-tag { font-size: 10px; }
+      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .card-name { font-size: 11px; padding: 0 10px; }
+      .card-category { font-size: 8px; padding: 0 10px; }
+    }
+
+    @media (max-width: 430px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card { transition: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand"><span class="logo" aria-hidden="true"></span>BLOCK /</div>
+    <span class="header-tag">EXPLORADOR DE OBJETOS 3D</span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div>
+        <span class="eyebrow">Inventario creativo</span>
+        <h1>Pequeños objetos.<br>Grandes aventuras.</h1>
+        <p>Explora la colección y descubre cada detalle en 3D.</p>
+      </div>
+      <div class="counter"><strong id="total">24</strong> objetos / 5 categorías</div>
+    </section>
+
+    <div class="layout">
+      <section class="catalog" aria-label="Catálogo de objetos">
+        <input
+          class="search"
+          id="search"
+          type="search"
+          placeholder="Buscar una espada, una gema, una llave..."
+          aria-label="Buscar objetos"
+        >
+        <nav class="filters" id="filters" aria-label="Filtrar por categoría"></nav>
+        <p id="status" role="status">Preparando los modelos...</p>
+        <div class="grid" id="grid"></div>
+        <p id="empty" hidden>No se encontraron objetos con esos filtros.</p>
+      </section>
+
+      <aside class="viewer-panel" aria-label="Vista del objeto seleccionado">
+        <div class="viewer-top">
+          <span>VISTA INTERACTIVA</span>
+          <span class="live">3D</span>
+        </div>
+
+        <div id="viewport" aria-label="Modelo 3D interactivo"></div>
+        <p class="hint">Arrastra para rotar / Usa la rueda o pellizca para acercar</p>
+
+        <div class="details" aria-live="polite">
+          <span id="detail-category"></span>
+          <h2 id="detail-name">Cargando...</h2>
+          <p id="detail-description"></p>
+          <div class="tags">
+            <span>LOW POLY</span>
+            <span>GEOMETRÍA 3D</span>
+            <span>VISTA 360°</span>
+          </div>
+          <div class="actions">
+            <button class="action" id="rotate" aria-pressed="false">
+              Rotación automática
+            </button>
+            <button class="action" id="reset">Restablecer vista</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      Colección original inspirada en la estética de juegos de bloques.
+      Proyecto independiente, no afiliado a Roblox.
+    </footer>
+  </main>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { catalogo, crearObjeto } from "./catalogo.js";
+
+    const $ = (id) => document.getElementById(id);
+    const normalize = (value) =>
+      value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+    async function init() {
+      // Un único contexto WebGL: miniaturas y visor comparten renderer.
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true
+      });
+
+      renderer.setPixelRatio(1);
+      renderer.setSize(256, 256);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.25;
+      renderer.setClearColor(0x000000, 0);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+
+      scene.add(new THREE.HemisphereLight(0xdfefff, 0x44405d, 2.5));
+
+      const key = new THREE.DirectionalLight(0xffedce, 4);
+      key.position.set(4, 6, 7);
+      scene.add(key);
+
+      const fill = new THREE.DirectionalLight(0x91bfff, 2.2);
+      fill.position.set(-5, 2, 3);
+      scene.add(fill);
+
+      const rim = new THREE.DirectionalLight(0xc6a0ff, 3);
+      rim.position.set(2, 4, -5);
+      scene.add(rim);
+
+      const root = new THREE.Group();
+      scene.add(root);
+
+      let currentModel = null;
+      let selected = catalogo.find((item) => item.id === "espada-cristal");
+      let category = "Todos";
+      const thumbs = new Map();
+
+      function disposeModel(model) {
+        const geometries = new Set();
+        const materials = new Set();
+
+        model.traverse((node) => {
+          if (!node.isMesh) return;
+          geometries.add(node.geometry);
+          const list = Array.isArray(node.material)
+            ? node.material
+            : [node.material];
+          list.forEach((material) => materials.add(material));
+        });
+
+        geometries.forEach((geometry) => geometry.dispose());
+        materials.forEach((material) => material.dispose());
+      }
+
+      function showModel(item) {
+        if (currentModel) {
+          root.remove(currentModel);
+          disposeModel(currentModel);
+        }
+        currentModel = crearObjeto(item.id);
+        root.add(currentModel);
+      }
+
+      function cameraHome() {
+        camera.position.set(3.5, 2.25, 5.2);
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+      }
+
+      // Generación progresiva de miniaturas para no bloquear toda la página.
+      for (let i = 0; i < catalogo.length; i++) {
+        const item = catalogo[i];
+        showModel(item);
+        cameraHome();
+        renderer.render(scene, camera);
+        thumbs.set(item.id, renderer.domElement.toDataURL("image/png"));
+        $("status").textContent = `Preparando modelos: ${i + 1}/${catalogo.length}`;
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+
+      const viewport = $("viewport");
+      viewport.appendChild(renderer.domElement);
+      renderer.domElement.setAttribute("role", "img");
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.enablePan = false;
+      controls.minDistance = 3.8;
+      controls.maxDistance = 10;
+      controls.autoRotateSpeed = 1.4;
+      controls.autoRotate = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+      controls.target.set(0, 0, 0);
+
+      function syncRotateButton() {
+        $("rotate").setAttribute("aria-pressed", String(controls.autoRotate));
+      }
+
+      syncRotateButton();
+
+      function resetView() {
+        cameraHome();
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+
+      function select(item) {
+        selected = item;
+        showModel(item);
+        resetView();
+
+        $("detail-category").textContent = item.categoria;
+        $("detail-name").textContent = item.nombre;
+        $("detail-description").textContent = item.descripcion;
+        renderer.domElement.setAttribute("aria-label", `Modelo 3D: ${item.nombre}`);
+
+        document.querySelectorAll(".card").forEach((button) => {
+          const active = button.dataset.id === item.id;
+          button.classList.toggle("selected", active);
+          button.setAttribute("aria-pressed", String(active));
+        });
+      }
+
+      function drawCatalog() {
+        const query = normalize($("search").value.trim());
+        const visible = catalogo.filter((item) => {
+          const matchesCategory = category === "Todos" || item.categoria === category;
+          const matchesQuery = normalize(
+            `${item.nombre} ${item.categoria}`
+          ).includes(query);
+          return matchesCategory && matchesQuery;
+        });
+
+        const fragment = document.createDocumentFragment();
+
+        visible.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "card";
+          button.dataset.id = item.id;
+          button.style.setProperty("--item-color", item.color);
+          button.classList.toggle("selected", item.id === selected.id);
+          button.setAttribute("aria-pressed", String(item.id === selected.id));
+          button.setAttribute("aria-label", `Ver ${item.nombre} en 3D`);
+
+          const image = document.createElement("img");
+          image.src = thumbs.get(item.id);
+          image.alt = "";
+          image.width = 256;
+          image.height = 256;
+          image.loading = "lazy";
+
+          const dot = document.createElement("span");
+          dot.className = "card-dot";
+          dot.setAttribute("aria-hidden", "true");
+
+          const name = document.createElement("span");
+          name.className = "card-name";
+          name.textContent = item.nombre;
+
+          const label = document.createElement("span");
+          label.className = "card-category";
+          label.textContent = item.categoria;
+
+          button.append(image, dot, name, label);
+          button.addEventListener("click", () => select(item));
+          fragment.appendChild(button);
+        });
+
+        $("grid").replaceChildren(fragment);
+        $("empty").hidden = visible.length !== 0;
+        $("status").textContent = `${visible.length} de ${catalogo.length} objetos`;
+      }
+
+      const categories = ["Todos", ...new Set(catalogo.map((item) => item.categoria))];
+
+      categories.forEach((name) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "filter";
+        button.textContent = name;
+        button.classList.toggle("active", name === category);
+        button.setAttribute("aria-pressed", String(name === category));
+
+        button.addEventListener("click", () => {
+          category = name;
+          [...$("filters").children].forEach((element) => {
+            const active = element === button;
+            element.classList.toggle("active", active);
+            element.setAttribute("aria-pressed", String(active));
+          });
+          drawCatalog();
+        });
+
+        $("filters").appendChild(button);
+      });
+
+      $("total").textContent = catalogo.length;
+      $("search").addEventListener("input", drawCatalog);
+      $("reset").addEventListener("click", resetView);
+      $("rotate").addEventListener("click", () => {
+        controls.autoRotate = !controls.autoRotate;
+        syncRotateButton();
+      });
+
+      const resizeObserver = new ResizeObserver(() => {
+        const width = viewport.clientWidth;
+        const height = viewport.clientHeight;
+        if (!width || !height) return;
+
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      });
+
+      resizeObserver.observe(viewport);
+      select(selected);
+      drawCatalog();
+
+      const clock = new THREE.Clock();
+      renderer.setAnimationLoop(() => {
+        const delta = Math.min(clock.getDelta(), 0.05);
+        controls.update(delta);
+        renderer.render(scene, camera);
+      });
+    }
+
+    init().catch((error) => {
+      console.error(error);
+      $("status").textContent =
+        "No se pudo iniciar el catálogo. Comprueba WebGL, la conexión " +
+        "y que ambos archivos estén alojados en el mismo servidor.";
+      $("detail-name").textContent = "Visor no disponible";
+    });
+  </script>
+</body>
+</html>
